@@ -1,0 +1,4 @@
+[Report]
+report_path = /home/bookman/Experiment/Report/
+result_database = /home/bookman/Experiment/Report/result_database.bldata
+result_database_pool = /home/bookman/Experiment/Report/result_database_pool.bldata
