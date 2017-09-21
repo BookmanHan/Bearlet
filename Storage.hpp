@@ -64,6 +64,26 @@ public:
 		ifile->second->read(p_data, n_size);
 	}
 
+	template<typename T>
+	void write(const string file_name, const T& elem)
+	{
+		auto ifile = storage_system.find(file_name);
+		if (ifile == storage_system.end())
+			throw string("No File Found");
+
+		*(ifile->second) << elem;
+	}
+
+	template<typename T>
+	void read(const string file_name, const T& elem)
+	{
+		auto ifile = storage_system.find(file_name);
+		if (ifile == storage_system.end())
+			throw string("No File Found");
+
+		*(ifile->second) >> elem;
+	}
+
 public:
 	fstream& find_file(const string& file_name)
 	{

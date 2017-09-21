@@ -42,24 +42,18 @@ public:
 	void close()
 	{
 		stg.close_file(name);
-		delete this;
-	}
-
-	void try_close()
-	{
-		stg.close_file(name);
 	}
 
 	virtual ~FormatFile()
 	{
-		try_close();
+		close();
 	}
 
 	virtual void reset(
 		const string file_path,
 		const ios::ios_base::openmode open_mode)
 	{
-		try_close();
+		close();
 		name = file_path;
 		stg.open_file(name, file_path, open_mode);
 	}
@@ -75,6 +69,46 @@ public:
 	{
 		stg.read(name, p_data, n_size);
 		return *this;
+	}
+};
+
+class FormatLog
+	:public FormatFile
+{
+public:
+	FormatLog(
+		const string name,
+		const string file_path)
+		:FormatFile(name, file_path, ios::out)
+	{
+		;
+	}
+
+	FormatLog(
+		const string file_path)
+		:FormatFile(file_path, ios::out)	
+	{
+		;
+	}
+
+public:
+	template<typename T>
+	FormatLog& operator >> (const T& elem)
+	{
+		stg.read(name, elem);
+		return *this;
+	}
+
+	template<typename T>
+	FormatLog& operator << (const T& elem)
+	{
+		stg.write(name, elem);
+		return *this;
+	}
+
+	virtual ~FormatLog()
+	{
+		;
 	}
 };
 
@@ -177,20 +211,98 @@ void bearlet_write(const string& file_path, function<void(FormatFile&)> fn_proc)
 	return;
 }
 
-template<typename T>
 inline
-FormatFile& operator << (FormatFile& file, const T& src)
+FormatFile& operator << (FormatFile& file, const int& src)
 {
-	file.write((char*)&src, sizeof(T));
+	file.write((char*)&src, sizeof(int));
 
 	return file;
 }
 
-template<typename T>
 inline
-FormatFile& operator >> (FormatFile& file, T& src)
+FormatFile& operator >> (FormatFile& file, int& src)
 {
-	file.read((char*)&src, sizeof(T));
+	file.read((char*)&src, sizeof(int));
+
+	return file;
+}
+
+inline
+FormatFile& operator << (FormatFile& file, const char& src)
+{
+	file.write((char*)&src, sizeof(char));
+
+	return file;
+}
+
+inline
+FormatFile& operator >> (FormatFile& file, char& src)
+{
+	file.read((char*)&src, sizeof(char));
+
+	return file;
+}
+
+inline
+FormatFile& operator << (FormatFile& file, const unsigned int& src)
+{
+	file.write((char*)&src, sizeof(int));
+
+	return file;
+}
+
+inline
+FormatFile& operator >> (FormatFile& file, unsigned int& src)
+{
+	file.read((char*)&src, sizeof(int));
+
+	return file;
+}
+
+inline
+FormatFile& operator << (FormatFile& file, const unsigned char& src)
+{
+	file.write((char*)&src, sizeof(char));
+
+	return file;
+}
+
+inline
+FormatFile& operator >> (FormatFile& file, unsigned char& src)
+{
+	file.read((char*)&src, sizeof(char));
+
+	return file;
+}
+
+inline
+FormatFile& operator << (FormatFile& file, const float& src)
+{
+	file.write((char*)&src, sizeof(float));
+
+	return file;
+}
+
+inline
+FormatFile& operator >> (FormatFile& file, float& src)
+{
+	file.read((char*)&src, sizeof(float));
+
+	return file;
+}
+
+inline
+FormatFile& operator << (FormatFile& file, const double& src)
+{
+	file.write((char*)&src, sizeof(double));
+
+	return file;
+}
+
+inline
+FormatFile& operator >> (FormatFile& file, double& src)
+{
+	file.read((char*)&src, sizeof(double));
 
 	return file;
 }
@@ -198,7 +310,7 @@ FormatFile& operator >> (FormatFile& file, T& src)
 inline
 FormatFile& operator << (FormatFile& file, const string& src)
 {
-	auto n_len = src.length();
+	int n_len = src.length();
 	file.write((char*)&n_len, sizeof(n_len));
 	file.write((char*)src.data(), sizeof(char)*n_len);
 
@@ -208,7 +320,7 @@ FormatFile& operator << (FormatFile& file, const string& src)
 inline
 FormatFile& operator >> (FormatFile& file, string& src)
 {
-	decltype(src.length()) n_len;
+	int n_len = 0;
 	file.read((char*)&n_len, sizeof(n_len));
 
 	char* ca_str = new char[n_len + 1];
@@ -316,6 +428,44 @@ FormatFile& operator >> (FormatFile& file, map<T_first, T_second>& src)
 
 		src.insert(tmp);
 	}
+
+	return file;
+}
+
+template<typename T1, typename T2, typename T3>
+inline
+FormatFile& operator << (FormatFile& file, const tuple<T1, T2, T3> & src)
+{
+	file.write((char*)&src, sizeof(tuple<T1, T2, T3>));
+
+	return file;
+}
+
+template<typename T1, typename T2, typename T3>
+inline
+FormatFile& operator >> (FormatFile& file, const tuple<T1, T2, T3> & src)
+{
+	file.read((char*)&src, sizeof(tuple<T1, T2, T3>));
+
+	return file;
+}
+
+template<typename T1, typename T2>
+inline
+FormatFile& operator << (FormatFile& file, const pair<T1, T2> & src)
+{
+	file << src.first;
+	file << src.second;
+
+	return file;
+}
+
+template<typename T1, typename T2>
+inline
+FormatFile& operator >> (FormatFile& file, pair<T1, T2> & src)
+{
+	file >> src.first;
+	file >> src.second;
 
 	return file;
 }
