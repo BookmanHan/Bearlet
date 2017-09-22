@@ -95,15 +95,18 @@ public:
 			bool should_first_line_be_outfit)
 	{
 		deal_with_table_outfit(should_first_line_be_outfit);
-		arr_out = af::constant(0, n_line, n_filed);
-
+		
+		float* data = new float[n_line * n_filed];
 		for(auto iline = 0; iline < n_line; ++iline)
 		{
 			for(auto ifield=0; ifield < n_filed; ++ifield)
 			{
 				string str_out = get_string();
-				arr_out(iline, ifield) = fn_embedding(iline, ifield, str_out); 
+				data[ifield * n_line + iline] = fn_embedding(iline, ifield, str_out); 
 			}
 		}
+
+		arr_out = af::array(n_line, n_filed, data);
+		delete[] data;
 	}
 };

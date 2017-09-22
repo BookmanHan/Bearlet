@@ -512,8 +512,9 @@ FormatFile& operator >> (FormatFile& file, af::array& arr)
 	float* data = new float[n_size];	
 	file.read((char*)data, sizeof(float)*n_size);
 
-
 	arr = af::array(nd_0, nd_1, nd_2, nd_3, data);
+
+	delete[] data;
 
 	return file;
 }
