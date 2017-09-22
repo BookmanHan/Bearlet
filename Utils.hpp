@@ -40,7 +40,7 @@ inline string time_logging()
 
 template<typename T>
 inline
-T bl_cast(const string str)
+T bearlet_cast(const string str)
 {
 	stringstream ss(str);
 
@@ -51,7 +51,7 @@ T bl_cast(const string str)
 }
 
 template<typename T>
-string bl_cast(const T elem)
+string bearlet_cast(const T elem)
 {
 	stringstream ss;
 	ss << elem;

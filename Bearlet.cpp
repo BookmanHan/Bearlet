@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 				else return (float)2.;
 			}
 			
-			return bl_cast<float>(str);
+			return bearlet_cast<float>(str);
 		}, false);
 
 	bearlet_write("a.bldata",
