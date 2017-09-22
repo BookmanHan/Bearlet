@@ -84,6 +84,24 @@ public:
 		*(ifile->second) >> elem;
 	}
 
+	string read_lines(const string file_name)
+	{
+		auto ifile = storage_system.find(file_name);
+		if (ifile == storage_system.end())
+			throw string("No File Found");
+
+		string str_lines;
+		while(!ifile->second->eof())
+		{
+			string str_inline;
+			getline(*ifile->second, str_inline);
+
+			str_lines = str_lines + str_inline + "\n";
+		}
+
+		return str_lines;
+	}
+
 public:
 	fstream& find_file(const string& file_name)
 	{

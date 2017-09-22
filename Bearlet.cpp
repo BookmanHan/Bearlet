@@ -2,27 +2,42 @@
 #include "File.hpp"
 #include "Config.hpp"
 #include "Logging.hpp"
+#include "FormatLoader.hpp"
+#include "Utils.hpp"
 
 int main(int argc, char** argv)
 {
-	try
-	{
-		logout.record() << bearlet_config.configs["Report"]["report_path"];
-		logout.record() << "This is a file";
-		logout.record() << 1;
-		logout.record() << 1.5;
-		logout.flush();
+	FormatLoaderCSV loader("/home/bookman/Data/Classicial/abalone/abalone.data", ",");
+	
+	af::array arr;
+	loader.to_array(arr, 
+		[](int nline, int nfield, const string str)
+		{
+			if (nfield == 0)
+			{
+				if (str == "M") return (float)0.;
+				else if (str == "F") return (float)1.;
+				else return (float)2.;
+			}
+			
+			return bl_cast<float>(str);
+		}, false);
 
-		logdb.push_env("Test Framework", 1.0);
-		logdb.push_result("Recall", 1.0);
-		logdb.record();
-		logout.record() << "End.";
-		logdb.restore();
-	}
-	catch(string& str)
-	{
-		cout << str << endl;
-	}
+	bearlet_write("a.bldata",
+			[&](FormatFile& file)
+			{
+				file << arr;
+			});
+
+	af::array ard;
+
+	bearlet_read("a.bldata",
+			[&](FormatFile& file)
+			{
+				file >> ard;
+			});
+
+	af_print(ard);
 
 	return 0;
 }

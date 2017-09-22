@@ -39,11 +39,13 @@ public:
 		return stg.flush_file(name);
 	}
 
+protected:
 	void close()
 	{
 		stg.close_file(name);
 	}
 
+public:
 	virtual ~FormatFile()
 	{
 		close();
@@ -69,6 +71,11 @@ public:
 	{
 		stg.read(name, p_data, n_size);
 		return *this;
+	}
+
+	string read_lines()
+	{
+		return stg.read_lines(name);
 	}
 };
 
@@ -466,6 +473,47 @@ FormatFile& operator >> (FormatFile& file, pair<T1, T2> & src)
 {
 	file >> src.first;
 	file >> src.second;
+
+	return file;
+}
+
+inline
+FormatFile& operator << (FormatFile& file, const af::array& arr)
+{
+	int nd_0 = arr.dims(0);
+	int nd_1 = arr.dims(1);
+	int nd_2 = arr.dims(2);
+	int nd_3 = arr.dims(3);
+
+	file << nd_0 << nd_1 << nd_2 << nd_3;
+
+	float *data = arr.host<float>();
+	int n_size = arr.dims(0) * arr.dims(1) * arr.dims(2) * arr.dims(3);	
+	file.write((char*)data, sizeof(float)*n_size);
+
+	af::freeHost(data);
+
+	return file;
+}
+
+inline
+FormatFile& operator >> (FormatFile& file, af::array& arr)
+{
+	int nd_0;
+	int nd_1;
+	int nd_2;
+	int nd_3;
+
+	file >> nd_0 >> nd_1 >> nd_2 >> nd_3;
+
+	dim_t ndims[] = {nd_0, nd_1, nd_2, nd_3};
+
+	int n_size = nd_0 * nd_1 * nd_2 * nd_3;
+	float* data = new float[n_size];	
+	file.read((char*)data, sizeof(float)*n_size);
+
+
+	arr = af::array(nd_0, nd_1, nd_2, nd_3, data);
 
 	return file;
 }

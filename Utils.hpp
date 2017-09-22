@@ -38,3 +38,23 @@ inline string time_logging()
 	return ss.str();
 }
 
+template<typename T>
+inline
+T bl_cast(const string str)
+{
+	stringstream ss(str);
+
+	T value;
+	ss >> value;
+
+	return value;
+}
+
+template<typename T>
+string bl_cast(const T elem)
+{
+	stringstream ss;
+	ss << elem;
+
+	return ss.str();
+}
