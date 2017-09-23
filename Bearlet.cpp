@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
 	af::array arr;
 
-	FormatLoaderUnalignedSeperate loader("/home/bookman/Data/a.txt", 20);
+	FormatLoaderAlignedSeperate loader("/home/bookman/Experiment/Bearlet/Dataset/mnist/mnist_train.csv", ",");
 	loader.to_array(arr,
 			[&](int nline, int nfield, const string & elem)
 			{
@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 			});
 	logout.record() << "End.";
 
-	af_print(arr);
+	af_print(arr(-1,af::span));
 
 	return 0;
 }

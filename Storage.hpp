@@ -90,16 +90,10 @@ public:
 		if (ifile == storage_system.end())
 			throw string("No File Found");
 
-		string str_lines;
-		while(!ifile->second->eof())
-		{
-			string str_inline;
-			getline(*ifile->second, str_inline);
+		istreambuf_iterator<char>beg(*ifile->second), end;
+		string strdata(beg, end);
 
-			str_lines = str_lines + str_inline + "\n";
-		}
-
-		return str_lines;
+		return strdata;
 	}
 
 public:
