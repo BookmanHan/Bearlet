@@ -99,8 +99,8 @@ public:
 	:FormatLoader(file_name), segment(segment), alignment(alignment), n_fields(n_fields)
 	{
 		n_lines = count(loading_content.begin(), loading_content.end(), '\n') - 1;
-		boost::split(content_word, loading_content, boost::is_any_of(segment + "\n"));
 		boost::replace_all(loading_content, "\n", " " + alignment + "\n");	
+		boost::split(content_word, loading_content, boost::is_any_of(segment + "\n"));
 
 		logout.record() << "[Format Loader] Seperate Format.";
 		logout.record() << "[Format Loader] Total lines = " << n_lines;
@@ -123,10 +123,9 @@ public:
 			{
 				ifield = 0;
 				++ iline;
-				continue;
-
 				if (iline >= n_lines)
 					break;
+				continue;
 			}
 			
 			data[ifield * n_lines + iline] = fn_embedding(iline, ifield, *i);

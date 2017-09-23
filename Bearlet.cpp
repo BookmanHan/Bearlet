@@ -15,7 +15,9 @@ int main(int argc, char** argv)
 			{
 				return bearlet_cast<float>(elem);
 			});
-
 	logout.record() << "End.";
+
+	af_print(arr);
+
 	return 0;
 }
