@@ -42,10 +42,11 @@ template<typename T>
 inline
 T bearlet_cast(const string str)
 {
-	stringstream ss(str);
-
+	stringstream ss;
+	ss << str;
 	T value;
 	ss >> value;
+	ss.str("");
 
 	return value;
 }
@@ -53,7 +54,8 @@ T bearlet_cast(const string str)
 template<typename T>
 string bearlet_cast(const T elem)
 {
-	stringstream ss;
+	static stringstream ss;
+	ss.str("");
 	ss << elem;
 
 	return ss.str();

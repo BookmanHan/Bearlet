@@ -15,98 +15,125 @@ public:
 	{
 		FormatFile file(path_name, ios::in);
 		loading_content = file.read_lines(); 
-	}
 
-public:
-	virtual string get_string() = 0;
+		logout.record() << "[Format Loader] loading from file="<<path_name;
+	}
 };
 
 
-class FormatLoaderCSV
+class FormatLoaderAlignedSeperate
 	:public FormatLoader
 {
 protected:
 	const string segment;
 
 protected:
-	vector<string> content_lines;
-	int n_current_line;
+	vector<string> content_word;
 
 protected:
-	vector<string> vstr_current_line;
-	int n_current_word;
+	int n_lines;
+	int n_fields;
 
 public:
-	FormatLoaderCSV(const string file_name, const string segment)
-	:FormatLoader(file_name), segment(segment), n_current_line(0), n_current_word(10000000) 
+	FormatLoaderAlignedSeperate(const string file_name, const string segment)
+	:FormatLoader(file_name), segment(segment)
 	{
-		boost::split(content_lines, loading_content, boost::is_any_of("\n\r"));
-		for(auto i=content_lines.begin(); i!=content_lines.end(); ++i)
-		{
-			boost::trim(*i);
-			if (i->length() <= 1)
-			{
-				content_lines.erase(i, content_lines.end());
-				break;
-			}
-		}
+		n_lines = count(loading_content.begin(), loading_content.end(), '\n') - 1;
+		boost::split(content_word, loading_content, boost::is_any_of(segment + "\n"));
+		
+		int n_words = content_word.size();
+		n_fields = (int)((float)n_words / (float)n_lines + 0.5); 
+
+		logout.record() << "[Format Loader] Seperate Format.";
+		logout.record() << "[Format Loader] Total lines = " << n_lines;
+		logout.record() << "[Format Loader] Total fields = " << n_fields;
 	}
 	
 public:
-	virtual string get_string()
-	{
-		++ n_current_word;
-		if (n_current_word >= (int)vstr_current_line.size())
-		{
-			vstr_current_line.clear();
-			boost::split(vstr_current_line, content_lines[n_current_line], boost::is_any_of(segment));
-			++n_current_line;
-			n_current_word = 0;
-		}
-
-		return vstr_current_line[n_current_word];
-	}
-
-public:
-	int n_line;
-	int n_filed;
-	vector<string> str_outfit;
-
-public:
-	void deal_with_table_outfit(bool should_first_line_be_outfit = true)
-	{
-		n_line = content_lines.size() - 1;
-		get_string();
-		str_outfit = vstr_current_line;
-		n_filed = vstr_current_line.size();
-
-		n_current_word = 10000000;
-
-		if (should_first_line_be_outfit)
-			++n_line;
-		else
-			n_current_line = 1;
-	}
-
-public:
 	void to_array(
 			af::array& arr_out, 
-			function<float(int, int, const string)> fn_embedding,
-			bool should_first_line_be_outfit)
+			function<float(int, int, const string&)> fn_embedding,
+			bool should_first_line_be_outfit = false)
 	{
-		deal_with_table_outfit(should_first_line_be_outfit);
+		float* data = new float[n_lines * n_fields];
 		
-		float* data = new float[n_line * n_filed];
-		for(auto iline = 0; iline < n_line; ++iline)
+		int n_skips = should_first_line_be_outfit?n_fields:0;
+		int iline = 0;
+		int ifield = 0;
+		for(auto i=content_word.begin() + n_skips; i!=content_word.begin() + n_lines * n_fields; ++i)
 		{
-			for(auto ifield=0; ifield < n_filed; ++ifield)
+			data[ifield * n_lines + iline] = fn_embedding(iline, ifield, *i);
+			++ ifield;
+			if (ifield >= n_fields)
 			{
-				string str_out = get_string();
-				data[ifield * n_line + iline] = fn_embedding(iline, ifield, str_out); 
+				ifield = 0;
+				++ iline;
 			}
 		}
 
-		arr_out = af::array(n_line, n_filed, data);
+		arr_out = af::array(n_lines, n_fields, data);
+		delete[] data;
+	}
+};
+
+class FormatLoaderUnalignedSeperate
+	:public FormatLoader
+{
+protected:
+	const string segment;
+	const string alignment;
+	
+protected:
+	vector<string> content_word;
+
+protected:
+	int n_lines;
+	int n_fields;
+
+public:
+	FormatLoaderUnalignedSeperate(
+			const string file_name, 
+			const int n_fields,
+			const string segment="\t ", 
+			const string alignment="$$q234fakxjhekfhuq34uh$$")
+	:FormatLoader(file_name), segment(segment), alignment(alignment), n_fields(n_fields)
+	{
+		n_lines = count(loading_content.begin(), loading_content.end(), '\n') - 1;
+		boost::split(content_word, loading_content, boost::is_any_of(segment + "\n"));
+		boost::replace_all(loading_content, "\n", " " + alignment + "\n");	
+
+		logout.record() << "[Format Loader] Seperate Format.";
+		logout.record() << "[Format Loader] Total lines = " << n_lines;
+		logout.record() << "[Format Loader] Total fields = " << n_fields;
+	}
+	
+public:
+	void to_array(
+			af::array& arr_out, 
+			function<float(int, int, const string&)> fn_embedding)
+	{
+		float* data = new float[n_lines * n_fields];
+		fill(data, data + n_lines * n_fields, 0.f);
+
+		int iline = 0;
+		int ifield = 0;
+		for(auto i=content_word.begin(); i!=content_word.end(); ++i)
+		{
+			if (*i == alignment)
+			{
+				ifield = 0;
+				++ iline;
+				continue;
+
+				if (iline >= n_lines)
+					break;
+			}
+			
+			data[ifield * n_lines + iline] = fn_embedding(iline, ifield, *i);
+			++ifield;
+		}
+
+		arr_out = af::array(n_lines, n_fields, data);
 		delete[] data;
 	}
 };
