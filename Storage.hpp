@@ -90,10 +90,31 @@ public:
 		if (ifile == storage_system.end())
 			throw string("No File Found");
 
-		istreambuf_iterator<char>beg(*ifile->second), end;
+		istreambuf_iterator<char> beg(*ifile->second), end;
 		string strdata(beg, end);
 
 		return strdata;
+	}
+
+	template<typename T>
+	void read_all(const string file_name, vector<T>& vout)
+	{
+		auto ifile = storage_system.find(file_name);
+		if (ifile == storage_system.end())
+			throw string("No File Found");
+
+		ifile->second->seekg(0, ios::end);
+		streampos file_size = ifile->second->tellg();
+		int size_data = file_size * sizeof(char) / sizeof(T);
+
+		T* data = new T[size_data];
+		ifile->second->seekg(0, ios::beg);
+		ifile->second->read((char*)data, file_size * sizeof(char));
+
+		vout.insert(vout.end(), data, data + size_data);
+
+		delete[] data;
+		return;
 	}
 
 public:

@@ -7,22 +7,32 @@
 
 class FormatLoader
 {
+public:
+	FormatLoader()
+	{
+		;
+	}
+};
+
+class FormatLoaderText
+	:public FormatLoader
+{
 protected:
 	string loading_content;
 
 public:
-	FormatLoader(const string path_name)
+	FormatLoaderText(const string path_name)
 	{
 		FormatFile file(path_name, ios::in);
 		loading_content = file.read_lines(); 
 
-		logout.record() << "[Format Loader] loading from file="<<path_name;
+		logout.record() << "[FormatLoader] loading from file = "<<path_name;
 	}
 };
 
 
 class FormatLoaderAlignedSeperate
-	:public FormatLoader
+	:public FormatLoaderText
 {
 protected:
 	const string segment;
@@ -36,7 +46,7 @@ protected:
 
 public:
 	FormatLoaderAlignedSeperate(const string file_name, const string segment)
-	:FormatLoader(file_name), segment(segment)
+	:FormatLoaderText(file_name), segment(segment)
 	{
 		n_lines = count(loading_content.begin(), loading_content.end(), '\n') - 1;
 		boost::split(content_word, loading_content, boost::is_any_of(segment + "\n"));
@@ -44,9 +54,9 @@ public:
 		int n_words = content_word.size();
 		n_fields = (int)((float)n_words / (float)n_lines + 0.5); 
 
-		logout.record() << "[Format Loader] Seperate Format.";
-		logout.record() << "[Format Loader] Total lines = " << n_lines;
-		logout.record() << "[Format Loader] Total fields = " << n_fields;
+		logout.record() << "[FormatLoader] Seperate Format.";
+		logout.record() << "[FormatLoader] Total lines = " << n_lines;
+		logout.record() << "[FormatLoader] Total fields = " << n_fields;
 	}
 	
 public:
@@ -77,7 +87,7 @@ public:
 };
 
 class FormatLoaderUnalignedSeperate
-	:public FormatLoader
+	:public FormatLoaderText
 {
 protected:
 	const string segment;
@@ -96,15 +106,15 @@ public:
 			const int n_fields,
 			const string segment="\t ", 
 			const string alignment="$$q234fakxjhekfhuq34uh$$")
-	:FormatLoader(file_name), segment(segment), alignment(alignment), n_fields(n_fields)
+	:FormatLoaderText(file_name), segment(segment), alignment(alignment), n_fields(n_fields)
 	{
 		n_lines = count(loading_content.begin(), loading_content.end(), '\n') - 1;
 		boost::replace_all(loading_content, "\n", " " + alignment + "\n");	
 		boost::split(content_word, loading_content, boost::is_any_of(segment + "\n"));
 
-		logout.record() << "[Format Loader] Seperate Format.";
-		logout.record() << "[Format Loader] Total lines = " << n_lines;
-		logout.record() << "[Format Loader] Total fields = " << n_fields;
+		logout.record() << "[FormatLoader] Seperate Format.";
+		logout.record() << "[FormatLoader] Total lines = " << n_lines;
+		logout.record() << "[FormatLoader] Total fields = " << n_fields;
 	}
 	
 public:
@@ -128,11 +138,38 @@ public:
 				continue;
 			}
 			
-			data[ifield * n_lines + iline] = fn_embedding(iline, ifield, *i);
+			if (ifield < n_fields)
+				data[ifield * n_lines + iline] = fn_embedding(iline, ifield, *i);
+			else
+				logout.record() << "[FormatLoader] Insufficient Fields.";
+
 			++ifield;
 		}
 
 		arr_out = af::array(n_lines, n_fields, data);
 		delete[] data;
+	}
+};
+
+class FormatLoaderByte
+	:public FormatLoader
+{
+protected:
+	FormatFile file;
+
+public:
+	FormatLoaderByte(const string file_name)
+		:file(file_name, ios::binary | ios::in) 
+	{
+		;
+	}
+
+public:
+	template<typename T> 
+	void to_array(af::array& arr_out, function<void(af::array&, vector<T>&)>fn_process)
+	{
+		vector<T> vin;
+		file.read_all(vin);
+		fn_process(arr_out, vin);
 	}
 };

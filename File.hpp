@@ -77,6 +77,12 @@ public:
 	{
 		return stg.read_lines(name);
 	}
+
+	template<typename T>
+	void read_all(vector<T>& vout)
+	{
+		return stg.read_all(name, vout);
+	}
 };
 
 class FormatLog
