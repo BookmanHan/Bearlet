@@ -2,3 +2,67 @@
 report_path = /home/bookman/Experiment/Report/
 result_database = /home/bookman/Experiment/Report/result_database.bldata
 result_database_pool = /home/bookman/Experiment/Report/result_database_pool.bldata
+
+[MNIST]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/MNIST/
+bldata = MNIST.bldata
+train = train.csv
+test = test.csv
+
+[WeiboPair]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/WeiboPair/
+bldata = WeiboPair.bldata
+post = weibo_pair.post
+response = weibo_pair.response
+
+[Abalone]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/abalone/
+bldata = abalone.bldata
+data = abalone.data
+names = abalone.names
+
+[CIFAR.10]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/CIFAR/10/
+bldata = cifar_10.bldata
+train = train.bin
+test = test.bin
+size_label = 1
+size_pixel = 3072
+
+[CIFAR.100]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/CIFAR/100/
+bldata = cifar_100.bldata
+train = train.bin
+test = test.bin
+size_label = 2
+size_pixel = 3072
+
+[SimpleQuestions]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/SimpleQuestions/
+bldata = simple_questions.bldata
+FB2M = FB2M.txt
+FB5M = FB5M.txt
+description = description.txt
+train = train.txt
+test = test.txt
+valid = valid.txt
+
+[Movielens100K]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/Movielens/
+rating = ml100k.txt
+bldata = ml100k.bldata;
+
+[Movielens1M]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/Movielens/
+rating = ml1m.txt
+bldata = ml100k.bldata;
+
+[Movielens10M]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/Movielens/
+rating = ml10m.txt
+bldata = ml100k.bldata;
+
+[Movielens20M]
+base_dir = /home/bookman/Experiment/Bearlet/DataSet/Movielens/
+rating = ml20m.txt
+bldata = ml100k.bldata

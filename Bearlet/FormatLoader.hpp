@@ -23,10 +23,10 @@ protected:
 public:
 	FormatLoaderText(const string path_name)
 	{
+		logout.record() << "[FormatLoader] loading from file = "<<path_name;
+		
 		FormatFile file(path_name, ios::in);
 		loading_content = file.read_lines(); 
-
-		logout.record() << "[FormatLoader] loading from file = "<<path_name;
 	}
 };
 

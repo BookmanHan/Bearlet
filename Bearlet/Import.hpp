@@ -15,7 +15,6 @@
 #include <bitset>
 #include <queue>
 #include <functional>
-#include <thread>  
 #include <cstdlib>
 #include <arrayfire.h>
 #include <iterator>

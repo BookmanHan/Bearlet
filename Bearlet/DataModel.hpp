@@ -30,7 +30,7 @@ public:
 	DataModel(const string name)
 		:ds(name)
 	{
-		;
+		logout.record() << "[DataModel] loading DataSet " << ds.name << ".";
 	}
 
 public:
@@ -44,6 +44,7 @@ public:
 				{
 					load_ff(file);
 				});
+		logout.record() <<"[DataModel] DataSet " << ds.name << " loaded.";
 	}
 	
 	void load()
@@ -62,6 +63,7 @@ public:
 				{
 					save_ff(file);
 				});
+		logout.record() <<"[DataModel] DataSet " << ds.name << " saved.";
 	}
 	
 	void save()
