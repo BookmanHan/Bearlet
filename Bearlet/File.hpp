@@ -2,6 +2,9 @@
 #include "Import.hpp"
 #include "Storage.hpp"
 
+#define sNetwork	Storage::network_system
+#define sDisk		Storage::global_system
+
 class FormatFile
 {
 public:
@@ -13,19 +16,19 @@ public:
 		const string name,
 		const string file_path,
 		const ios::ios_base::openmode open_mode,
-		Storage& stg = *Storage::global_system)
-		:stg(stg), name(name)
+		Storage* stg = Storage::global_system)
+		:stg(*stg), name(name)
 	{
-		stg.open_file(name, file_path, open_mode);
+		this->stg.open_file(name, file_path, open_mode);
 	}
 
 	FormatFile(
 		const string file_path,
 		const ios::ios_base::openmode open_mode,
-		Storage& stg = *Storage::global_system)
-		:stg(stg), name(file_path)
+		Storage* stg = Storage::global_system)
+		:stg(*stg), name(file_path)
 	{
-		stg.open_file(name, file_path, open_mode);
+		this->stg.open_file(name, file_path, open_mode);
 	}
 
 public:
@@ -130,7 +133,7 @@ class FormatLoad
 	:public FormatFile
 {
 public:
-	FormatLoad(const string name, const string file_path, Storage& stg = *Storage::global_system)
+	FormatLoad(const string name, const string file_path, Storage* stg = Storage::global_system)
 		:FormatFile(name, file_path, ios::binary | ios::in, stg)
 	{
 		char word_size = sizeof(int);
@@ -140,7 +143,7 @@ public:
 			throw string("Address Model Unmatched.");
 	}
 
-	FormatLoad(const string file_path, Storage& stg = *Storage::global_system)
+	FormatLoad(const string file_path, Storage* stg = Storage::global_system)
 		:FormatFile(file_path, ios::binary | ios::in, stg)
 	{
 		char word_size = sizeof(int);
@@ -164,14 +167,14 @@ class FormatSave
 	:public FormatFile
 {
 public:
-	FormatSave(const string name, const string file_path, Storage& stg = *Storage::global_system)
+	FormatSave(const string name, const string file_path, Storage* stg = Storage::global_system)
 		:FormatFile(name, file_path, ios::binary | ios::out, stg)
 	{
 		char word_size = sizeof(int);
 		write((char*)&word_size, sizeof(char));
 	}
 
-	FormatSave(const string file_path, Storage& stg = *Storage::global_system)
+	FormatSave(const string file_path, Storage* stg = Storage::global_system)
 		:FormatFile(file_path, ios::binary | ios::out, stg)
 	{
 		char word_size = sizeof(int);
@@ -193,7 +196,7 @@ void bearlet_read(
 		function<void(FormatFile&)> fn_proc,
 		Storage* stg = Storage::global_system)
 {
-	FormatLoad fin(file_path, *stg);
+	FormatLoad fin(file_path, stg);
 	fn_proc(fin);
 
 	return;
@@ -204,7 +207,7 @@ void bearlet_write(
 		function<void(FormatFile&)> fn_proc,
 		Storage* stg = Storage::global_system)
 {
-	FormatSave fout(file_path, *stg);
+	FormatSave fout(file_path, stg);
 	fn_proc(fout);
 
 	return;

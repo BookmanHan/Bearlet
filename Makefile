@@ -1,4 +1,4 @@
-LIBS = -lafcpu
+LIBS = -lafcuda -lboost_system
 LIB_PATHS = -L/usr/lib
 INCLUDES = -I/usr/include
 CC = icc $(COMPILER_OPTIONS)

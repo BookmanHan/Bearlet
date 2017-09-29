@@ -2,29 +2,30 @@
 #include "File.hpp"
 #include "Logging.hpp"
 #include "Dataset.hpp"
+#include "Interactive.hpp"
 
 int main(int, char**)
 {
-	dmMNIST loader;
-	loader.load();
-
-	// bearlet_write("127.0.0.1:6666",
-			// [&](FormatFile& file)
+	// RemoteCommander cmd("127.0.0.1:6666", ios::out);
+	// cmd.send("Run", 
+			// [](FormatFile& file)
 			// {
-				// file << loader.arr_train_data; 
-				// af_print(loader.arr_train_data(af::end, af::span));
-			// }, Storage::network_system);
+				// int a = 10;
+				// string b = "Run Successly.";
+				// file << a << b;
+			// });
 
-	bearlet_read("127.0.0.1:6666",
-			[&](FormatFile& file)
+	RemoteCommander cmd("127.0.0.1:6666", ios::in);
+	cmd.registe("Run",
+			[](FormatFile& file)
 			{
-				af::array arr;
-				file >> arr; 
-				af::array check = (arr == loader.arr_train_data);
-				af::array res =  af::sum(af::sum(check, 1), 0);
-				logout.record() << "Check = " << print_array(res);
-				logout.record() << "Should = " << arr.dims(0) * arr.dims(1);
-			}, Storage::network_system);
+				int a;
+				string b;
+				file >> a >> b;
+				logout.record() << a;
+				logout.record() << b;
+			});
+	cmd.recieve();
 
 	return 0;
 }
