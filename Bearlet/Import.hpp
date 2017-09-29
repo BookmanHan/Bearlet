@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <arrayfire.h>
 #include <iterator>
+#include <thread>
 
 using namespace std;
 
