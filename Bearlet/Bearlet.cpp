@@ -3,37 +3,28 @@
 #include "Logging.hpp"
 #include "Dataset.hpp"
 
-int main(int argc, char** argv)
+int main(int, char**)
 {
-	dmMNIST ld_MNIST;
-	ld_MNIST.save();
+	dmMNIST loader;
+	loader.load();
 
-	dmWeiboPair ld_wp;
-	ld_wp.save();
+	// bearlet_write("127.0.0.1:6666",
+			// [&](FormatFile& file)
+			// {
+				// file << loader.arr_train_data; 
+				// af_print(loader.arr_train_data(af::end, af::span));
+			// }, Storage::network_system);
 
-	dmAbalone ld_aba;
-	ld_aba.save();
-
-	dmCIFAR10 ld_c10;
-	ld_c10.save();
-
-	dmCIFAR100 ld_c100;
-	ld_c100.save();
-
-	dmSimpleQuestions ld_sq;
-	ld_sq.save();
-
-	dmMovielens100K ld_ma;
-	ld_ma.save();
-
-	dmMovielens1M ld_mb;
-	ld_mb.save();
-
-	dmMovielens10M ld_mc;
-	ld_mc.save();
-
-	dmMovielens20M ld_md;
-	ld_md.save();
+	bearlet_read("127.0.0.1:6666",
+			[&](FormatFile& file)
+			{
+				af::array arr;
+				file >> arr; 
+				af::array check = (arr == loader.arr_train_data);
+				af::array res =  af::sum(af::sum(check, 1), 0);
+				logout.record() << "Check = " << print_array(res);
+				logout.record() << "Should = " << arr.dims(0) * arr.dims(1);
+			}, Storage::network_system);
 
 	return 0;
 }

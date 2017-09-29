@@ -81,7 +81,13 @@ public:
 	template<typename T>
 	void read_all(vector<T>& vout)
 	{
-		return stg.read_all(name, vout);
+		T* pdata;
+		int size_data;
+
+		stg.read_all(name, (void**)&pdata, size_data);
+		vout.insert(vout.end(), pdata, pdata + size_data * sizeof(char) / sizeof(T));
+
+		delete[] pdata;
 	}
 };
 
@@ -106,19 +112,14 @@ public:
 
 public:
 	template<typename T>
-	FormatLog& operator >> (const T& elem)
-	{
-		stg.read(name, elem);
-		return *this;
-	}
-
-	template<typename T>
 	FormatLog& operator << (const T& elem)
 	{
-		stg.write(name, elem);
+		DiskStorage& dstg = (DiskStorage&)stg; 
+		dstg.write(name, elem);
 		return *this;
 	}
 
+public:
 	virtual ~FormatLog()
 	{
 		;
@@ -129,8 +130,8 @@ class FormatLoad
 	:public FormatFile
 {
 public:
-	FormatLoad(const string name, const string file_path)
-		:FormatFile(name, file_path, ios::binary | ios::in)
+	FormatLoad(const string name, const string file_path, Storage& stg = *Storage::global_system)
+		:FormatFile(name, file_path, ios::binary | ios::in, stg)
 	{
 		char word_size = sizeof(int);
 		read((char*)&word_size, sizeof(char));
@@ -139,8 +140,8 @@ public:
 			throw string("Address Model Unmatched.");
 	}
 
-	FormatLoad(const string file_path)
-		:FormatFile(file_path, ios::binary | ios::in)
+	FormatLoad(const string file_path, Storage& stg = *Storage::global_system)
+		:FormatFile(file_path, ios::binary | ios::in, stg)
 	{
 		char word_size = sizeof(int);
 		read((char*)&word_size, sizeof(char));
@@ -163,15 +164,15 @@ class FormatSave
 	:public FormatFile
 {
 public:
-	FormatSave(const string name, const string file_path)
-		:FormatFile(name, file_path, ios::binary | ios::out)
+	FormatSave(const string name, const string file_path, Storage& stg = *Storage::global_system)
+		:FormatFile(name, file_path, ios::binary | ios::out, stg)
 	{
 		char word_size = sizeof(int);
 		write((char*)&word_size, sizeof(char));
 	}
 
-	FormatSave(const string file_path)
-		:FormatFile(file_path, ios::binary | ios::out)
+	FormatSave(const string file_path, Storage& stg = *Storage::global_system)
+		:FormatFile(file_path, ios::binary | ios::out, stg)
 	{
 		char word_size = sizeof(int);
 		write((char*)&word_size, sizeof(char));
@@ -187,39 +188,24 @@ protected:
 	friend FormatFile& make_fin(const string file_path);
 };
 
-inline
-FormatFile& make_fout(const string file_path)
+void bearlet_read(
+		const string& file_path, 
+		function<void(FormatFile&)> fn_proc,
+		Storage* stg = Storage::global_system)
 {
-	return *(new FormatSave(file_path));
-}
-
-
-inline
-FormatFile& make_fin(const string file_path)
-{
-	return *(new FormatLoad(file_path));
-}
-
-inline
-void make_close(FormatFile& that)
-{
-	delete &that;
-}
-
-void bearlet_read(const string& file_path, function<void(FormatFile&)> fn_proc)
-{
-	FormatFile& fout = make_fin(file_path);
-	fn_proc(fout);
-	make_close(fout);
+	FormatLoad fin(file_path, *stg);
+	fn_proc(fin);
 
 	return;
 }
 
-void bearlet_write(const string& file_path, function<void(FormatFile&)> fn_proc)
+void bearlet_write(
+		const string& file_path, 
+		function<void(FormatFile&)> fn_proc,
+		Storage* stg = Storage::global_system)
 {
-	FormatFile& fin = make_fout(file_path);
-	fn_proc(fin);
-	make_close(fin);
+	FormatSave fout(file_path, *stg);
+	fn_proc(fout);
 
 	return;
 }
@@ -511,8 +497,6 @@ FormatFile& operator >> (FormatFile& file, af::array& arr)
 	int nd_3;
 
 	file >> nd_0 >> nd_1 >> nd_2 >> nd_3;
-
-	dim_t ndims[] = {nd_0, nd_1, nd_2, nd_3};
 
 	int n_size = nd_0 * nd_1 * nd_2 * nd_3;
 	float* data = new float[n_size];	

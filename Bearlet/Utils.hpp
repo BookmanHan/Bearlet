@@ -1,27 +1,6 @@
 #pragma once
 #include "Import.hpp"
 
-template<typename T>
-class Namer
-{
-public:
-	vector<T>	id_to_name;
-	map<T, int>	name_to_id;
-
-public:
-	const T & operator [] (const int id)
-	{
-		return id_to_name[id];
-	}
-
-	int operator [] (const T name)
-	{
-		return name_to_id[id];
-	}
-};
-
-typedef Namer<string> StringNamer;
-
 inline string time_logging()
 {
 	const time_t log_time = time(nullptr);
@@ -59,4 +38,11 @@ string bearlet_cast(const T elem)
 	ss << elem;
 
 	return ss.str();
+}
+
+inline
+char print_array(const af::array& elem)
+{
+	af_print(elem);
+	return ' ';
 }
