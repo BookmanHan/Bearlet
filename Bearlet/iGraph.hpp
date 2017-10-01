@@ -324,7 +324,8 @@ public:
 		logout.record() << "[iGraph] Objectives:";
 		for(auto i=Losses.begin(); i!= Losses.end(); ++i)
 		{
-			logout.record() <<"[iGraph] Loss of " << (*i)->name << ::print_array((*i)->value_forward);
+			float res = *((*i)->value_forward.host<float>());
+			logout.record() <<"[iGraph] Loss of " << (*i)->name << " = " << res;
 		}
 	}
 

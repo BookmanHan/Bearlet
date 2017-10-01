@@ -78,10 +78,38 @@ public:
 	}
 };
 
+class SymNeg
+	:public Symbol
+{
+public:
+	SymNeg()
+		:Symbol("Neg")
+	{
+		;
+	}
+
+public:
+	virtual void forward() override
+	{
+		value_forward = -sym_in[0]->value_forward;
+	}
+
+	virtual void backward() override
+	{
+		sym_in[0]->value_backward -= value_backward;
+	}
+};
+
 Symbol& operator - (Symbol& a, Symbol& b)
 {
 	return sym_new_node<SymMinus>(a, b);
 }
+
+Symbol& operator - (Symbol& a)
+{
+	return sym_new_node<SymNeg>(a);
+}
+
 
 class SymMultiply
 	:public Symbol
@@ -191,10 +219,7 @@ public:
 		
 		if (sym_in[1]->be_const == false)
 		{
-			if (sym_in[0]->be_const == true)
-				sym_in[1]->value_backward += - value_backward / dynamic_cast<SymConst*>(sym_in[0])->const_value * value_forward;
-			else
-				sym_in[1]->value_backward += - value_backward / sym_in[1]->value_forward * value_forward;
+			sym_in[1]->value_backward += - value_backward / sym_in[1]->value_forward * value_forward;
 		}
 	}
 };
