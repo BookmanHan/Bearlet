@@ -6,8 +6,10 @@
 
 #define autoref auto&
 
+class iGraph;
+
 class Symbol
-{
+{		
 public:
 	af::array value_backward_grad;
 	af::array value_backward_x;
@@ -17,6 +19,9 @@ public:
 public:
 	vector<Symbol*> sym_in;
 	vector<Symbol*> sym_out;
+
+public:
+	iGraph* model;
 	
 public:
 	const string name;
@@ -215,6 +220,10 @@ Symbol& sym_new_node(Symbol& a, Symbol& b)
 {
 	Symbol* node = sym_generator(new Tnode);
 
+	if (a.model != b.model)
+		throw string("Two Symbol could not match.");
+	node->model = a.model;
+
 	a.sym_out.push_back(node);
 	b.sym_out.push_back(node);
 	node->sym_in.push_back(&a);
@@ -227,6 +236,8 @@ template<typename Tnode>
 Symbol& sym_new_node(Symbol& a)
 {
 	Symbol* node = sym_generator(new Tnode);
+
+	node->model = a.model;
 
 	a.sym_out.push_back(node);
 	node->sym_in.push_back(&a);
@@ -258,15 +269,8 @@ public:
 	Symbol& data_source(const string name, const af::array& arr)
 	{
 		Symbol* node = sym_generator(new SymDatum(name));
+		node->model = this;
 		node->set(arr);
-		DataSources.push_back(node);
-
-		return *node;
-	}
-
-	Symbol& data_const(float const_value)
-	{
-		Symbol *node =  sym_generator(new SymConst(const_value));
 		DataSources.push_back(node);
 
 		return *node;
@@ -275,6 +279,7 @@ public:
 	Symbol& variable(const string name, const af::array& arr)
 	{
 		Symbol* node = sym_generator(new SymVariable(name));
+		node->model = this;
 		node->set(arr);
 		Variables.push_back(node);
 
@@ -284,11 +289,20 @@ public:
 	Symbol& loss(const string name, Symbol& target)
 	{
 		Symbol* node = sym_generator(new SymLoss(name, target));
+		node->model = this;
 		Losses.push_back(node);
 
 		return *node;
 	}
 
+	Symbol& operator()(float elem)
+	{
+		Symbol* node = sym_generator(new SymConst(elem));
+		node->model = this;
+		DataSources.push_back(node);
+
+		return *node;
+	}
 public:
 	void perform()
 	{
