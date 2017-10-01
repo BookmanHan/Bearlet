@@ -41,8 +41,8 @@ string bearlet_cast(const T elem)
 }
 
 inline
-char print_array(const af::array& elem)
+char print_array(const af::array& _)
 {
-	af_print(elem);
+	af_print(_);
 	return ' ';
 }

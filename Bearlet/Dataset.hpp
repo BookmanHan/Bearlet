@@ -369,6 +369,9 @@ public:
 							idx_relation[elem] = idx_relation.size();
 						return idx_relation[elem];
 						break;
+					default:
+						return idx_relation.begin()->second;
+						break;
 					}
 				}, false);
 
@@ -580,3 +583,11 @@ public:
 	}
 };
 
+af::array label_vectorization(const af::array& arr, int nfield)
+{
+	af::array vec_train_label = af::constant(0.f, arr.dims(0), nfield);
+	af::array line_pos = af::range(arr.dims(0));
+	vec_train_label(line_pos + arr.dims(0) * arr) = 1.f;
+
+	return vec_train_label;
+}

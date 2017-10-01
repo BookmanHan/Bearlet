@@ -189,9 +189,9 @@ public:
 					sock[file_name]->connect(ep[file_name]);
 					break;
 				}
-				catch(...)
+				catch(exception& exp)
 				{
-					;
+					cout <<endl << exp.what() <<endl;
 				}
 			}
 		}
