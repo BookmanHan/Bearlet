@@ -23,31 +23,41 @@ Symbol& sigmoid_layer(Symbol& x, int n_input, int n_output)
 {
 	iGraph& model = *x.model;
 	autoref W = model.variable("Hidden Layer", xavier_initial(n_input, n_output));
-	return sigm(abs(x) * W);
+	// model.loss("Regularization", model(1.f) % W % W);
+	return sigmoid(x * W);
+}
+
+Symbol& tanh_layer(Symbol& x, int n_input, int n_output)
+{
+	iGraph& model = *x.model;
+	autoref W = model.variable("Hidden Layer", xavier_initial(n_input, n_output));
+	autoref t = x * W;
+	return (exp(t) - exp(-t))/(exp(t) + exp(-t));
 }
 
 int main(int, char* argv[])
 {
-	dmCIFAR10 loader;
+	dmMNIST loader;
 	loader.load();
 
 	int size_feature = loader.arr_train_data.dims(1);
 
 	iGraph model;
-		
+
 	autoref label = model.data_source("label", label_vectorization(loader.arr_train_label, 10));
 	autoref data = model.data_source("data", loader.arr_train_data/255.f);
+	autoref h1 = sigmoid_layer(data, size_feature, 10);
+	Symbol* hr = &h1;
+	for(auto i=0; i<30; ++i)
+	{
+		hr = & sigmoid_layer(*hr, 10, 10);
+		model.loss("Layer Loss", (*hr - label)%(*hr - label));
+	}
+	autoref y = sigmoid_layer(*hr, 10, 10);
 
-	autoref hid_1 = sigmoid_layer(data, size_feature, 300);
-	autoref t = sigmoid_layer(hid_1, 300, 500);
-	autoref y = sigmoid_layer(t, 500, 10);
-
-	model.loss("Prediction", (y - label) % (y - label)); 
-	model.loss("Diversity", abs(t));
-	model.loss("Diversity", abs(hid_1));
-
+	model.loss("Prediction", (y - label) % (y - label));
 	model.train(atoi(argv[1]));
-		
+	
 	label.set(label_vectorization(loader.arr_test_label, 10));
 	data.set(loader.arr_test_data/255.f);
 	

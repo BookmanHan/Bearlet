@@ -346,10 +346,21 @@ public:
 	void train(int epos, function<void(iGraph&, int)> fn_mid_train = [](iGraph&, int){})
 	{
 		int round = epos;
+		int portion = epos / 100;
+		int percent = 0;
+		logout.record() << "[iGraph] Training -> ";
 		while(epos --> 0)
 		{
 			perform();
-			logout.record() << "[iGraph::train] " << int((float)(round - epos)/round * 10000)/100.f <<" percenet.";
+			if (round - epos >= percent * portion)
+			{
+				if (percent % 10 == 0)
+					logout << '|';
+				if (percent % 2 == 0)
+					logout << '*';
+				++ percent;
+				logout.flush();
+			}
 			fn_mid_train(*this,  round - epos);
 			learn();
 		}
