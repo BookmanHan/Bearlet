@@ -1,12 +1,12 @@
-//#define iGraph_DEBUG
 #include "Import.hpp"
 #include "Logging.hpp"
 #include "Dataset.hpp"
 #include "iGraph.hpp"
 #include "Operator.hpp"
+#include "View.hpp"
 
 // To Design Batch Mode.
-// +, -, %, *, log, exp, /
+// +, -, %, *, log, exp, /, t(), abs 
 // 1.大的张量不归一化直接用图，会产生 NAN 错误。但直接使用 sigmoid 不会，必须解决这个问题。
 //
 // TO DO:
@@ -22,8 +22,8 @@ Symbol& sigm(Symbol& x)
 Symbol& sigmoid_layer(Symbol& x, int n_input, int n_output)
 {
 	iGraph& model = *x.model;
-	autoref W = model.variable("Hidden Layer", xavier_initial(n_input, n_output));
-	return sigmoid(x * W);
+	autoref W = model.variable("Hidden Layer", xavier_initial(n_output, n_input));
+	return sigmoid(x * W.t());
 }
 
 Symbol& tanh_layer(Symbol& x, int n_input, int n_output)
@@ -34,41 +34,39 @@ Symbol& tanh_layer(Symbol& x, int n_input, int n_output)
 	return (exp(t) - exp(-t))/(exp(t) + exp(-t));
 }
 
-int main(int, char* argv[])
+int main(int, char* [])
 {
-	dmMNIST loader;
+	af::info();
+	af::setDevice(0);
+
+	dmMovielens100K loader;
 	loader.load();
 
-	int size_feature = loader.arr_train_data.dims(1);
-
 	iGraph model;
+	autoref triple_user = model.data_source("Users", loader.arr_rating(af::seq(0, 10000, 2) ,0));
+	autoref triple_item = model.data_source("Items", loader.arr_rating(af::seq(0, 10000, 2) ,1));
+	autoref triple_rate = model.data_source("Rates", loader.arr_rating(af::seq(0, 10000, 2), 2));
 
-	autoref label = model.data_source("label", label_vectorization(loader.arr_train_label, 10));
-	autoref data = model.data_source("data", loader.arr_train_data/255.f);
-	autoref h1 = sigmoid_layer(data, size_feature, size_feature);
-	Symbol* hr = &h1;
+	autoref rep_user = model.variable("Rep Users", xavier_initial(10000, 10));
+	autoref rep_item = model.variable("Rep Items", xavier_initial(20000, 10));
 
-	for(auto i=0; i<atoi(argv[2]); ++i)
-	{
-		hr = & sigmoid_layer(*hr + data, size_feature, size_feature);
-	}
-	autoref y = sigmoid_layer(*hr, size_feature, 10);
+	autoref embed_user = rep_user[triple_user];
+	autoref embed_item = rep_item[triple_item];
 
-	model.loss("Prediction", (y - label) % (y - label));
-	model.train(atoi(argv[1]));
+	autoref pred = sum(embed_user %	embed_item, 1);
 	
-	label.set(label_vectorization(loader.arr_test_label, 10));
-	data.set(loader.arr_test_data/255.f);
-	
+	model.loss("Loss", (pred - triple_rate) % (pred - triple_rate));
+	model.train(100);
+
+	triple_user.set(loader.arr_rating(af::seq(1, 10000, 2), 0));
+	triple_item.set(loader.arr_rating(af::seq(1, 10000, 2), 1));
+	triple_rate.set(loader.arr_rating(af::seq(1, 10000, 2), 2));
+
 	model.perform();
-	model.report();
 
-	af::array idx_pred;
-	af::array val_pred;
-	af::max(val_pred, idx_pred, y.value_forward, 1);
-	
-	af::array acc = sum(idx_pred == loader.arr_test_label);
-	logout.record() << ::print_array(acc/(float)loader.arr_test_label.dims(0));
+	logout.direct() << ::print_array(
+		af::sum(af::abs(pred.value_forward - triple_rate.value_forward)/10000));
+
 
 	return 0;
 }

@@ -330,33 +330,6 @@ Symbol& log(Symbol& a)
 	return sym_new_node<SymLog>(a);
 }
 
-class SymABS
-	:public Symbol
-{
-public:
-	SymABS()
-		:Symbol("ABS")
-	{
-		;
-	}
-
-public:
-	virtual void forward() override
-	{
-		value_forward = af::abs(sym_in[0]->value_forward);
-	}
-
-	virtual void backward() override
-	{
-		sym_in[0]->value_backward += value_backward * af::sign(sym_in[0]->value_forward);
-	}
-};
-
-Symbol& abs(Symbol& a)
-{
-	return sym_new_node<SymABS>(a);
-}
-
 class SymTransport
 	:public Symbol
 {

@@ -62,14 +62,15 @@ public:
 		++ cur_forward;
 		if (cur_forward >= sym_in.size())
 		{
-#ifdef iGraph_DEBUG
+#ifdef BLDEBUG
 			logout.record() << name;
 #endif
 			forward();
 			value_backward = af::constant(0.f, value_forward.dims());
-#ifdef iGraph_DEBUG
+#ifdef BLDEBUG
 			logout << " = " << value_forward.dims(0) << ", " << value_forward.dims(1) << ", "
 				<< value_forward.dims(2) << ", " << value_forward.dims(3);
+			logout.flush();
 #endif
 
 			for(auto i=sym_out.begin(); i!=sym_out.end(); ++i)
@@ -85,7 +86,7 @@ public:
 		++ cur_backward;
 		if (cur_backward >= sym_out.size())
 		{
-#ifdef iGraph_DEBUG
+#ifdef BLDEBUG
 			logout.record() << name;
 			logout << " = " << value_backward.dims(0) << ", " << value_backward.dims(1) << ", "
 				<< value_backward.dims(2) << ", " << value_backward.dims(3);
@@ -101,6 +102,7 @@ public:
 
 public:
 	Symbol& t();
+	Symbol& operator[](Symbol& a);
 };
 
 class SymDatum
@@ -222,7 +224,8 @@ Symbol& sym_new_node(Symbol& a, Symbol& b)
 
 	if (a.model != b.model)
 		throw string("Two Symbol could not match.");
-	node->model = a.model;
+	else
+		node->model = a.model;
 
 	a.sym_out.push_back(node);
 	b.sym_out.push_back(node);
@@ -243,6 +246,35 @@ Symbol& sym_new_node(Symbol& a)
 	node->sym_in.push_back(&a);
 
 	return *node;
+}
+
+class SymPrint
+	:public Symbol
+{
+public:
+	SymPrint()
+		:Symbol("Print")
+	{
+		;
+	}
+
+public:
+	virtual void forward()
+	{
+		logout.record() << print_array(sym_in[0]->value_forward);
+		value_forward = sym_in[0]->value_forward;
+	}
+
+	virtual void backward()
+	{
+		logout.record() << print_array(value_backward);
+		sym_in[0]->value_backward = value_backward;
+	}
+};
+
+Symbol& print(Symbol& a)
+{
+	return sym_new_node<SymPrint>(a);
 }
 
 inline
@@ -366,4 +398,5 @@ public:
 		}
 	}
 };
+
 
