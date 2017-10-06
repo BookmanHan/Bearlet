@@ -1,7 +1,6 @@
 #pragma once
 #include "Import.hpp"
 #include "Logging.hpp"
-#include "Symbol.hpp"
 #include "Solver.hpp"
 
 #define autoref auto&
@@ -383,6 +382,7 @@ public:
 		logout.record() << "[iGraph] Training -> ";
 		while(epos --> 0)
 		{
+			fn_mid_train(*this,  round - epos);
 			perform();
 			if (round - epos >= percent * portion)
 			{
@@ -393,7 +393,6 @@ public:
 				++ percent;
 				logout.flush();
 			}
-			fn_mid_train(*this,  round - epos);
 			learn();
 		}
 	}
