@@ -386,12 +386,9 @@ public:
 			perform();
 			if (round - epos >= percent * portion)
 			{
-				if (percent % 10 == 0)
-					logout << '|';
-				if (percent % 2 == 0)
-					logout << '*';
-				++ percent;
+				logout.record() << "[iGraph Train] " << percent << "% have been done.";
 				logout.flush();
+				++ percent;
 			}
 			learn();
 		}
